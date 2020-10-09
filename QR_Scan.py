@@ -6,8 +6,10 @@ import time
 import threading
 import os
 
+#HOST SERVER
 httpserv = ('http://192.168.0.251/ethernet/data.php')
-tempread = serial.Serial('/dev/myUSB',9600)
+
+#GPIO SETUP
 relay = 6
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(relay,GPIO.OUT)
@@ -16,11 +18,14 @@ GPIO.output(relay, GPIO.LOW)
 def QR_Scan():
 
         try:
-            barcode = raw_input('Scan:')
-            if not barcode:
-                print 'Scan Barcode First'
-                pass
-            temphex = tempread.read(6).encode('hex')
+            barcode = raw_input('Scan:') #READ BARCODE
+        except:
+            print 'Scan Barcode First'
+        else:
+            print 'Check Temperature'
+        try:
+            tempread = serial.Serial('/dev/myUSB',9600) #INITIALIZE USB PORT
+            temphex = tempread.read(6).encode('hex')   #READTEMP
             tempval = int(temphex[4:8],16)
             if tempval <= 374:
                 GPIO.output(relay, GPIO.HIGH)
@@ -31,12 +36,11 @@ def QR_Scan():
             temperature = str(float(tempval)/10)
             print barcode
             print temperature
-            r = requests.get(httpserv,params = barcode + temperature)
+            r = requests.get(httpserv,params = barcode + temperature) # SEND DATA PARAMETER TO SERVER
             print r.text
         except  (OSError,serial.serialutil.SerialException):
             print("No data")
-            continue
-
+            
 while True:
     
     QR_Scan()
